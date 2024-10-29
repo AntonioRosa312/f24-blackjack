@@ -18,7 +18,7 @@ HEIGHT = info.current_h - 100
 
 # Constants
 FPS = 30
-CARD_WIDTH, CARD_HEIGHT = 100, 150
+#CARD_WIDTH, CARD_HEIGHT = 100, 150
 
 # Colors
 GREEN = (0, 128, 0)
@@ -33,7 +33,7 @@ CARD_VALUES = {
 }
 
 CARD_IMAGES = {
-    
+
 }
 
 # Card class
@@ -44,7 +44,7 @@ class Card:
         self.value = CARD_VALUES[rank]
         self.placed = False
 
-    def assignCard(self):
+    #def assignCard(self):
         
 
 
@@ -147,6 +147,7 @@ while running:
         if(not card.placed):
             #pygame.image.save(screen, 'screenshot.png')
             pygame.image.save(screen, "screenshot.png")
+            cardSlide(screen, (WIDTH,HEIGHT), i, False)
             cardFlip(screen, image, image2, i, False)
             card.placed = True
         else: 
