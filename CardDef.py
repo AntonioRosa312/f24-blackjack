@@ -47,24 +47,30 @@ def cardSlide(screen, screensize, i, dealer):
 
     cardPos = [screensize[0] / 2, 0]
     speed = 1
+    ticks = 30
 
     if(dealer):
          FinalPos = (50 + i * (CARD_WIDTH + 10), 100)
     else:
          FinalPos = ( (600 + i * (CARD_WIDTH - 50)), (550 - i * (CARD_HEIGHT- 100)) )
 
+    changeinX = FinalPos[0]/ticks
+    changeinY = FinalPos[1]/ticks
     while(True):
         if cardPos == FinalPos:
             break
+        else:
+            cardPos[0] += changeinX
+            cardPos[1] += changeinY
         #change in x
-        if(cardPos[0] > FinalPos[0]): cardPos[0] -= speed
-        elif(cardPos[0] < FinalPos[0]): cardPos[0] += speed
-        #change in y
-        if(cardPos[1] > FinalPos[1]): cardPos[1] -= speed
-        elif(cardPos[1] < FinalPos[1]): cardPos[1] += speed
+        # if(cardPos[0] > FinalPos[0]): cardPos[0] -= speed
+        # elif(cardPos[0] < FinalPos[0]): cardPos[0] += speed
+        # #change in y
+        # if(cardPos[1] > FinalPos[1]): cardPos[1] -= speed
+        # elif(cardPos[1] < FinalPos[1]): cardPos[1] += speed
 
         screen.blit(pygame.image.load("screenshot.png"), (0,0))
-        screen.blit(cardbck, cardPos)
+        screen.blit(cardBack, cardPos)
         pygame.display.flip()
         pygame.time.delay(2)
 

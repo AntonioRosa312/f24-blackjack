@@ -133,26 +133,21 @@ while running:
     # Draw the hands
     for i, card in enumerate(game.dealer_hand):
         if(not card.placed):
-            #pygame.image.save(screen, 'screenshot.png')
             pygame.image.save(screen, "screenshot.png")
             cardFlip(screen, card, i, True)
             card.placed = True
         else: 
             screen.blit(card.image, ((50 + i * (CARD_WIDTH + 10), 100) ))
-        #pygame.draw.rect(screen, WHITE, (50 + i * (CARD_WIDTH + 10), 100, CARD_WIDTH, CARD_HEIGHT))
-
 
 
     for i, card in enumerate(game.player_hand):
         if(not card.placed):
-            #pygame.image.save(screen, 'screenshot.png')
             pygame.image.save(screen, "screenshot.png")
             #cardSlide(screen, (WIDTH,HEIGHT), i, False)
             cardFlip(screen, card, i, False)
             card.placed = True
         else: 
             screen.blit(card.image, ( (600 + i * (CARD_WIDTH - 50)), (550 - i * (CARD_HEIGHT- 100)) ) )
-        #pygame.draw.rect(screen, WHITE, (600 + i * (CARD_WIDTH - 50), (550 - i * (CARD_HEIGHT- 100)), CARD_WIDTH, CARD_HEIGHT))
 
 
     # for i, card in enumerate(game.dealer_hand):
