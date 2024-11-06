@@ -29,12 +29,9 @@ BLACK = (0, 0, 0)
 CARD_VALUES = {
     '2': 2, '3': 3, '4': 4, '5': 5, '6': 6,
     '7': 7, '8': 8, '9': 9, '10': 10,
-    'J': 10, 'Q': 10, 'K': 10, 'A': 11
+    'jack': 10, 'queen': 10, 'king': 10, 'ace': 11
 }
 
-CARD_IMAGES = {
-
-}
 
 # Card class
 class Card:
@@ -43,6 +40,7 @@ class Card:
         self.rank = rank
         self.value = CARD_VALUES[rank]
         self.placed = False
+        self.image = assignCardImage(self)
 
     #def assignCard(self):
         
@@ -50,16 +48,18 @@ class Card:
 
     def __str__(self):
         return f"{self.rank} of {self.suit}"
-    
+
+
 # Deck class
 class Deck:
     def __init__(self):
-        self.cards = [Card(suit, rank) for suit in ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+        self.cards = [Card(suit, rank) for suit in ['Clubs', 'Diamonds', 'Hearts', 'Spades']
                       for rank in CARD_VALUES.keys()]
         random.shuffle(self.cards)
 
     def draw_card(self):
         return self.cards.pop()
+
 
 # Game class
 class Blackjack:
@@ -106,6 +106,7 @@ class Blackjack:
         else:
             return "It's a Tie!"
 
+
 # Initialize the game
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("368 Blackjack")
@@ -128,17 +129,16 @@ while running:
             if event.key == pygame.K_s:  # Stand
                 game.dealer_play()
 
-    image = pygame.transform.scale(pygame.image.load("PNG-cards-1.3/2_of_clubs.png"), (CARD_WIDTH, CARD_HEIGHT))
-    image2 = pygame.transform.scale(pygame.image.load("PNG-cards-1.3/card_image.png"), (CARD_WIDTH, CARD_HEIGHT))
+   
     # Draw the hands
     for i, card in enumerate(game.dealer_hand):
         if(not card.placed):
             #pygame.image.save(screen, 'screenshot.png')
             pygame.image.save(screen, "screenshot.png")
-            cardFlip(screen, image, image2, i, True)
+            cardFlip(screen, card, i, True)
             card.placed = True
         else: 
-            screen.blit(image, ((50 + i * (CARD_WIDTH + 10), 100) ))
+            screen.blit(card.image, ((50 + i * (CARD_WIDTH + 10), 100) ))
         #pygame.draw.rect(screen, WHITE, (50 + i * (CARD_WIDTH + 10), 100, CARD_WIDTH, CARD_HEIGHT))
 
 
@@ -147,11 +147,11 @@ while running:
         if(not card.placed):
             #pygame.image.save(screen, 'screenshot.png')
             pygame.image.save(screen, "screenshot.png")
-            cardSlide(screen, (WIDTH,HEIGHT), i, False)
-            cardFlip(screen, image, image2, i, False)
+            #cardSlide(screen, (WIDTH,HEIGHT), i, False)
+            cardFlip(screen, card, i, False)
             card.placed = True
         else: 
-            screen.blit(image, ( (600 + i * (CARD_WIDTH - 50)), (550 - i * (CARD_HEIGHT- 100)) ) )
+            screen.blit(card.image, ( (600 + i * (CARD_WIDTH - 50)), (550 - i * (CARD_HEIGHT- 100)) ) )
         #pygame.draw.rect(screen, WHITE, (600 + i * (CARD_WIDTH - 50), (550 - i * (CARD_HEIGHT- 100)), CARD_WIDTH, CARD_HEIGHT))
 
 

@@ -1,11 +1,17 @@
 import pygame
+import os
 
-
-# Constants
+# Card Dimensions
 CARD_WIDTH, CARD_HEIGHT = 100, 150
-cardbck = pygame.transform.scale(pygame.image.load("PNG-cards-1.3/card_image.png"), (CARD_WIDTH, CARD_HEIGHT))
+cardBack = pygame.transform.scale(pygame.image.load("PNG-cards-1.3/card_image.png"), (CARD_WIDTH, CARD_HEIGHT))
 
-def cardFlip(screen, cardFront, cardBack, i, dealer): #i is the number of card in hand
+# Load card files from called directory
+cardfiles = [f for f in os.listdir("PNG-cards-1.3")] 
+cardfiles = [f for f in cardfiles if len(f.split('_')) == 3 ] #or notUsed.append(f)]
+
+
+
+def cardFlip(screen, card, i, dealer): #i is the number of card in hand
 
     if(dealer):
          x,y = (50 + i * (CARD_WIDTH + 10), 100)
@@ -25,7 +31,7 @@ def cardFlip(screen, cardFront, cardBack, i, dealer): #i is the number of card i
             rotated_card = pygame.transform.rotate(cardBack, cardAngle)
         else:
             # Show the back card, rotated
-            rotated_card = pygame.transform.rotate(cardFront, 180 - cardAngle)
+            rotated_card = pygame.transform.rotate(card.image, 180 - cardAngle)
             
         screen.blit(pygame.image.load("screenshot.png"), (0,0))
         
@@ -35,7 +41,8 @@ def cardFlip(screen, cardFront, cardBack, i, dealer): #i is the number of card i
 
         if cardAngle == 180:
             break
-        
+
+
 def cardSlide(screen, screensize, i, dealer):
 
     cardPos = [screensize[0] / 2, 0]
@@ -65,3 +72,9 @@ def cardSlide(screen, screensize, i, dealer):
         #to make a smoother transition do FinalPos[x] - cardPos[x] / speed 
         #to make a smoother transition do FinalPos[y] - cardPos[y] / speed 
         # change of rate of x added to card and change of rate of y added to card for each tick speed
+
+
+def assignCardImage(card):
+    cardimage = [thiscard for thiscard in cardfiles if (card.rank in thiscard and card.suit.lower() in thiscard)]
+    cardimage.sort()
+    return pygame.transform.scale(pygame.image.load("PNG-cards-1.3/" + cardimage[0]), (CARD_WIDTH, CARD_HEIGHT))
