@@ -4,6 +4,7 @@ import random
 
 from CardDef import *
 #PLAYING CARDS https://code.google.com/archive/p/vector-playing-cards/downloads
+#https://wizardofodds.com/games/blackjack/card-counting/high-low/
 
 # Initialize Pygame
 pygame.init()
@@ -15,22 +16,12 @@ info = pygame.display.Info()
 WIDTH = info.current_w - 300
 HEIGHT = info.current_h - 100
 
-
-# Constants
 FPS = 30
-#CARD_WIDTH, CARD_HEIGHT = 100, 150
 
-# Colors
-GREEN = (0, 128, 0)
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
 
-# Card values
-CARD_VALUES = {
-    '2': 2, '3': 3, '4': 4, '5': 5, '6': 6,
-    '7': 7, '8': 8, '9': 9, '10': 10,
-    'jack': 10, 'queen': 10, 'king': 10, 'ace': 11
-}
+
+running_count = 0
 
 
 # Card class
@@ -41,10 +32,7 @@ class Card:
         self.value = CARD_VALUES[rank]
         self.placed = False
         self.image = assignCardImage(self)
-
-    #def assignCard(self):
-        
-
+        self.RCvalue = runningCountValue(self)
 
     def __str__(self):
         return f"{self.rank} of {self.suit}"
@@ -68,16 +56,19 @@ class Blackjack:
         self.player_hand = []
         self.dealer_hand = []
         self.game_over = False
+        self.player_wins = 0
 
+    def deal_initlial(self):
         # Deal initial cards
         for _ in range(2):
             self.player_hand.append(self.deck.draw_card())
             self.dealer_hand.append(self.deck.draw_card())
+            globals()["running_count"] += (self.player_hand[-1].RCvalue + self.dealer_hand[-1].RCvalue)
 
     def calculate_score(self, hand):
         score = sum(card.value for card in hand)
         # Adjust for Aces
-        aces = sum(1 for card in hand if card.rank == 'A')
+        aces = sum(1 for card in hand if card.rank == "ace")
         while score > 21 and aces:
             score -= 10
             aces -= 1
@@ -86,12 +77,16 @@ class Blackjack:
     def player_hit(self):
         if not self.game_over:
             self.player_hand.append(self.deck.draw_card())
+            globals()["running_count"] += self.player_hand[-1].RCvalue 
+
             if self.calculate_score(self.player_hand) > 21:
                 self.game_over = True
 
     def dealer_play(self):
         while self.calculate_score(self.dealer_hand) < 17:
             self.dealer_hand.append(self.deck.draw_card())
+            globals()["running_count"] += self.dealer_hand[-1].RCvalue
+
         self.game_over = True
 
     def check_winner(self):
@@ -100,6 +95,7 @@ class Blackjack:
         if player_score > 21:
             return "Player Busts! Dealer Wins!"
         elif dealer_score > 21 or player_score > dealer_score:
+            self.player_wins += 1
             return "Player Wins!"
         elif player_score < dealer_score:
             return "Dealer Wins!"
@@ -112,6 +108,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("368 Blackjack")
 clock = pygame.time.Clock()
 game = Blackjack()
+game.deal_initlial()
 
 # Main game loop
 running = True
@@ -162,11 +159,24 @@ while running:
     text_surface = font.render(score_text, True, WHITE)
     screen.blit(text_surface, (50, 50))
 
+    # display running count
+    RC_surface = font.render(f"This is RUNNING COUNT: {running_count}", True, WHITE)
+    screen.blit(RC_surface, (400,100))
+
+
     # Check for game over
     if game.game_over:
         result_text = game.check_winner()
         result_surface = font.render(result_text, True, WHITE)
         screen.blit(result_surface, (WIDTH // 2 - result_surface.get_width() // 2, HEIGHT // 2))
+
+        pygame.display.flip()
+        pygame.time.wait(2000)
+        # Reset player and dealer hands, deal 2 new cards to each 
+        game.player_hand = []
+        game.dealer_hand = []
+        game.deal_initlial()
+        game.game_over = not game.game_over
 
     pygame.display.flip()
     clock.tick(FPS)
