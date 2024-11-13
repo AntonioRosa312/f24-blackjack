@@ -3,6 +3,7 @@ import sys
 import random
 
 from CardDef import *
+from ChipDef import *
 #PLAYING CARDS https://code.google.com/archive/p/vector-playing-cards/downloads
 #https://wizardofodds.com/games/blackjack/card-counting/high-low/
 
@@ -113,6 +114,8 @@ game.deal_initlial()
 # Main game loop
 running = True
 while running:
+
+    startScreen(screen)
     
     screen.blit(pygame.transform.scale(pygame.image.load("table2.jpg"), (WIDTH, HEIGHT)), (0,0))
     
@@ -128,6 +131,10 @@ while running:
 
    
     # Draw the hands
+    '''
+    To fix dealer card flip removing players hand during animation, combine both dealer hand and player hand list, 
+    sort from already placed to not placed, first screen blit all the placed cards(dealer hand first, then player hand), then placed all unplaced cards (card flip) 
+    '''
     for i, card in enumerate(game.dealer_hand):
         if(not card.placed):
             pygame.image.save(screen, "screenshot.png")
