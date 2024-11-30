@@ -13,6 +13,25 @@ class Chip:
         self.green_chip = 25
 
 
+def argParse():
+    if len(sys.argv) < 2:
+        return False
+    elif len(sys.argv) == 2:
+        match sys.argv[1]:
+            case "-ai":
+                return True
+            case "-standard":
+                return False
+            case _:
+                print(f"ERROR: INCORRECT ARGUMENT \"{sys.argv[1]}\" PASSED, TRY \"-ai\" OR \"-standard\"\n")
+                sys.exit(os.EX_OK) #Exit code 64: Command line usage error.
+    else: 
+        print("ERROR: INSUFFICIENT AMOUNT OF ARGUMENTS PASSED\n")
+        sys.exit(os.EX_OK) #Exit code 64: Command line usage error.
+
+
+
+
 def startScreen(screen):
 
     WIDTH, HEIGHT = screen.get_size()

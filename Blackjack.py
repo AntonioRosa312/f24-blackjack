@@ -24,6 +24,10 @@ WHITE = (255, 255, 255)
 
 running_count = 0
 
+AI = argParse()
+print(AI)
+
+
 
 # Card class
 class Card:
@@ -56,8 +60,29 @@ class Blackjack:
         self.deck = Deck()
         self.player_hand = []
         self.dealer_hand = []
+        self.money = 0
         self.game_over = False
         self.player_wins = 0
+        self.currentbet = 0
+
+    def bet(self, amount):
+        
+        while True:
+            try:
+                amount = int(input("(Total Money = {self.money}) Enter Bet: \n"))
+                if amount > 0 and amount <= self.money:
+                    print(f"You just bet ${amount}\n")
+                    break
+                else:
+                    print("The number must be greater than 0 and less than or equal to your money. Try again.")
+            except ValueError:
+                print("That's not a valid number. Try again.")
+
+        if (self.money - amount) < 0:
+            print(f"ERROR: invalid bet of {amount}\n")
+        else:
+            self.currentbet = amount
+            self.money -= amount
 
     def deal_initlial(self):
         # Deal initial cards
@@ -94,13 +119,17 @@ class Blackjack:
         player_score = self.calculate_score(self.player_hand)
         dealer_score = self.calculate_score(self.dealer_hand)
         if player_score > 21:
+            # do nothing, current bet already subtracted from total money
             return "Player Busts! Dealer Wins!"
         elif dealer_score > 21 or player_score > dealer_score:
             self.player_wins += 1
+            self.money += (2 * self.currentbet) # add 2xcurrentbet to total money
             return "Player Wins!"
         elif player_score < dealer_score:
+            # do nothing, current bet already subtracted from total money
             return "Dealer Wins!"
         else:
+            self.money += self.currentbet # add back currentbet to total money
             return "It's a Tie!"
 
 
@@ -115,7 +144,7 @@ game.deal_initlial()
 running = True
 while running:
 
-    startScreen(screen)
+    #startScreen(screen)
     
     screen.blit(pygame.transform.scale(pygame.image.load("table2.jpg"), (WIDTH, HEIGHT)), (0,0))
     
