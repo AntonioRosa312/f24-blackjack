@@ -6,6 +6,7 @@ from CardDef import *
 from ChipDef import *
 #PLAYING CARDS https://code.google.com/archive/p/vector-playing-cards/downloads
 #https://wizardofodds.com/games/blackjack/card-counting/high-low/
+#https://www.vecteezy.com/vector-art/1609940-poker-chips-set-isolated-white-background
 
 # Initialize Pygame
 pygame.init()
@@ -23,6 +24,7 @@ WHITE = (255, 255, 255)
 
 
 running_count = 0
+#true_count = running_count/totalnumberofdecks
 
 AI = argParse()
 print(AI)
@@ -60,16 +62,19 @@ class Blackjack:
         self.deck = Deck()
         self.player_hand = []
         self.dealer_hand = []
-        self.money = 0
+        self.money = 100
         self.game_over = False
         self.player_wins = 0
         self.currentbet = 0
 
-    def bet(self, amount):
-        
+    def bet(self, amount=0):
+        if self.money <= 0:
+            self.game_over = True
+            exit
+
         while True:
             try:
-                amount = int(input("(Total Money = {self.money}) Enter Bet: \n"))
+                amount = int(input(f"(Total Money = {self.money}) Enter Bet: \n"))
                 if amount > 0 and amount <= self.money:
                     print(f"You just bet ${amount}\n")
                     break
@@ -78,11 +83,8 @@ class Blackjack:
             except ValueError:
                 print("That's not a valid number. Try again.")
 
-        if (self.money - amount) < 0:
-            print(f"ERROR: invalid bet of {amount}\n")
-        else:
-            self.currentbet = amount
-            self.money -= amount
+        self.currentbet = amount
+        self.money -= amount
 
     def deal_initlial(self):
         # Deal initial cards
@@ -138,6 +140,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("368 Blackjack")
 clock = pygame.time.Clock()
 game = Blackjack()
+game.bet()
 game.deal_initlial()
 
 # Main game loop
@@ -148,6 +151,8 @@ while running:
     
     screen.blit(pygame.transform.scale(pygame.image.load("table2.jpg"), (WIDTH, HEIGHT)), (0,0))
     
+    mousepos = pygame.mouse.get_pos()
+
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -157,6 +162,10 @@ while running:
                 game.player_hit()
             if event.key == pygame.K_s:  # Stand
                 game.dealer_play()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for chip in chip_list:
+                if chip.button_rect.collidepoint(mousepos):
+                    print("BUTTON CLICKED")
 
    
     # Draw the hands
@@ -182,22 +191,32 @@ while running:
         else: 
             screen.blit(card.image, ( (600 + i * (CARD_WIDTH - 50)), (550 - i * (CARD_HEIGHT- 100)) ) )
 
+    
+    # display chips on table
+    for chip in chip_list:
+        screen.blit(chip.image, chip.button)
+
 
     # for i, card in enumerate(game.dealer_hand):
     #     pygame.draw.rect(screen, WHITE, (50 + i * (CARD_WIDTH + 10), 100, CARD_WIDTH, CARD_HEIGHT))
     #     # You can add text here to display card rank/suit
 
-    # Display scores
+    # get scores
     player_score = game.calculate_score(game.player_hand)
     dealer_score = game.calculate_score(game.dealer_hand)
-    score_text = f"Player Score: {player_score} | Dealer Score: {dealer_score}"
+   
     font = pygame.font.Font(None, 36)
-    text_surface = font.render(score_text, True, WHITE)
+    # display score
+    text_surface = font.render(f"Player Score: {player_score} | Dealer Score: {dealer_score}", True, WHITE)
     screen.blit(text_surface, (50, 50))
 
     # display running count
     RC_surface = font.render(f"This is RUNNING COUNT: {running_count}", True, WHITE)
     screen.blit(RC_surface, (400,100))
+
+    # display money
+    money_surface = font.render(f"Balance: {game.money}", True, WHITE)
+    screen.blit(money_surface, (50, HEIGHT * .85))
 
 
     # Check for game over
@@ -205,13 +224,22 @@ while running:
         result_text = game.check_winner()
         result_surface = font.render(result_text, True, WHITE)
         screen.blit(result_surface, (WIDTH // 2 - result_surface.get_width() // 2, HEIGHT // 2))
+        print(f"MONI {game.money}\n")
+        screen.blit(money_surface, (50, HEIGHT * .85))
 
         pygame.display.flip()
         pygame.time.wait(2000)
         # Reset player and dealer hands, deal 2 new cards to each 
         game.player_hand = []
         game.dealer_hand = []
+        # re-display money after game over
+        money_surface = font.render(f"Balance: {game.money}", True, WHITE)
+        screen.blit(money_surface, (50, HEIGHT * .85))
+        # get a new bet
+        game.bet()
+        # deal a new starting hand
         game.deal_initlial()
+        # restart game
         game.game_over = not game.game_over
 
     pygame.display.flip()
