@@ -71,17 +71,60 @@ class Blackjack:
         if self.money <= 0:
             self.game_over = True
             exit
+        
+        print("Press the \'ENTER\' key to confirm bet")
 
         while True:
-            try:
-                amount = int(input(f"(Total Money = {self.money}) Enter Bet: \n"))
-                if amount > 0 and amount <= self.money:
-                    print(f"You just bet ${amount}\n")
-                    break
-                else:
-                    print("The number must be greater than 0 and less than or equal to your money. Try again.")
-            except ValueError:
-                print("That's not a valid number. Try again.")
+
+            mousepos = pygame.mouse.get_pos()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                #check for keys
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN: 
+                        self.currentbet = amount
+                        self.money -= amount
+                        return
+
+                #check for clicks    
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    #check all chips to see which ones were clicked
+                    for chip in chip_list:
+                        if chip.button_rect.collidepoint(mousepos):
+                            print("BUTTON CLICKED")
+
+                            # check if right click - this is to increase bet
+                            if event.button == 1:
+                                if (amount + chip.value <= self.money):
+                                    amount += chip.value
+                                    print(f"You just added ${chip.value}. Bet Total: ${amount}")
+                                else:
+                                    print("You do not have enough money to place that bet!, Try again.")   
+
+                            # check if left click - this is to decrease bet        
+                            elif event.button == 3:
+                                if (amount - chip.value > 0):
+                                    amount -= chip.value
+                                    print(f"You just removed ${chip.value}. Bet Total: ${amount}")
+                                else:
+                                    amount = 0
+                                    print("Your bet amount is now $0, Try adding some money to bet with.")
+                
+        
+            # try:
+            #     #amount = int(input(f"(Total Money = {self.money}) Enter Bet: \n"))
+            #     amount = 10
+            #     if amount > 0 and amount <= self.money:
+            #         print(f"You just bet ${amount}\n")
+            #         break
+            #     else:
+            #         print("The number must be greater than 0 and less than or equal to your money. Try again.")
+            # except ValueError:
+            #     print("That's not a valid number. Try again.")
 
         self.currentbet = amount
         self.money -= amount
@@ -166,6 +209,7 @@ while running:
             for chip in chip_list:
                 if chip.button_rect.collidepoint(mousepos):
                     print("BUTTON CLICKED")
+
 
    
     # Draw the hands
