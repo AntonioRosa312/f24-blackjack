@@ -56,7 +56,7 @@ class Deck:
         return self.cards.pop()
 
 
-# Game class
+# game class
 class Blackjack:
     def __init__(self):
         self.deck = Deck()
@@ -75,7 +75,6 @@ class Blackjack:
         print("Press the \'ENTER\' key to confirm bet")
 
         while True:
-
             mousepos = pygame.mouse.get_pos()
 
             for event in pygame.event.get():
@@ -85,10 +84,12 @@ class Blackjack:
 
                 #check for keys
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN: 
+                    if event.key == pygame.K_RETURN and amount > 0: 
                         self.currentbet = amount
                         self.money -= amount
                         return
+                    elif event.key == pygame.K_RETURN and amount <= 0:
+                        print("You cannot bet $0, Try again.")
 
                 #check for clicks    
                 elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -182,18 +183,31 @@ class Blackjack:
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("368 Blackjack")
 clock = pygame.time.Clock()
+
 game = Blackjack()
-game.bet()
+screen.blit(pygame.transform.scale(pygame.image.load("table2.jpg"), (WIDTH, HEIGHT)), (0,0))    
+
+# display chips on table
+for chip in chip_list:
+    screen.blit(chip.image, chip.button)
+
 game.deal_initlial()
+pygame.display.flip()
+
+game.bet()
+
 
 # Main game loop
 running = True
 while running:
-
-    #startScreen(screen)
     
+    # display table
     screen.blit(pygame.transform.scale(pygame.image.load("table2.jpg"), (WIDTH, HEIGHT)), (0,0))
     
+    # display chips on table
+    for chip in chip_list:
+        screen.blit(chip.image, chip.button)
+
     mousepos = pygame.mouse.get_pos()
 
     # Event handling
@@ -235,12 +249,10 @@ while running:
         else: 
             screen.blit(card.image, ( (600 + i * (CARD_WIDTH - 50)), (550 - i * (CARD_HEIGHT- 100)) ) )
 
-    
     # display chips on table
     for chip in chip_list:
         screen.blit(chip.image, chip.button)
-
-
+        
     # for i, card in enumerate(game.dealer_hand):
     #     pygame.draw.rect(screen, WHITE, (50 + i * (CARD_WIDTH + 10), 100, CARD_WIDTH, CARD_HEIGHT))
     #     # You can add text here to display card rank/suit
