@@ -4,6 +4,7 @@ import random
 
 from CardDef import *
 from ChipDef import *
+#from generalDef import *
 #PLAYING CARDS https://code.google.com/archive/p/vector-playing-cards/downloads
 #https://wizardofodds.com/games/blackjack/card-counting/high-low/
 #https://www.vecteezy.com/vector-art/1609940-poker-chips-set-isolated-white-background
@@ -22,6 +23,8 @@ FPS = 30
 
 WHITE = (255, 255, 255)
 
+font = pygame.font.Font(None, 36)
+fontbig = pygame.font.Font(None, 56)
 
 running_count = 0
 #true_count = running_count/totalnumberofdecks
@@ -75,6 +78,29 @@ class Blackjack:
         print("Press the \'ENTER\' key to confirm bet")
 
         while True:
+            ''' DISPLAY SECTION: BEGIN '''
+            # display table
+            screen.blit(pygame.transform.scale(pygame.image.load("table2.jpg"), (WIDTH, HEIGHT)), (0,0))
+    
+            # display chips on table
+            for chip in chip_list:
+                screen.blit(chip.image, chip.button)
+
+            # display money
+            money_surface = font.render(f"Balance: {self.money - amount}", True, WHITE)
+            screen.blit(money_surface, (50, HEIGHT * .8))
+
+            # display current bet
+            curbet_surface = font.render(f"| Current Bet: {amount} ", True, WHITE)
+            screen.blit(curbet_surface, (money_surface.get_width() + 60, HEIGHT * .8))
+
+            # display "Press Enter"
+            pressEnter_surface = fontbig.render("Press 'Enter' to Confirm Bet!", True, WHITE)
+            screen.blit(pressEnter_surface, ((WIDTH - pressEnter_surface.get_width()) * .5, (HEIGHT - pressEnter_surface.get_height()) * .4))
+
+            pygame.display.flip()
+            ''' DISPLAY SECTION: END   '''
+
             mousepos = pygame.mouse.get_pos()
 
             for event in pygame.event.get():
@@ -252,7 +278,7 @@ while running:
     # display chips on table
     for chip in chip_list:
         screen.blit(chip.image, chip.button)
-        
+
     # for i, card in enumerate(game.dealer_hand):
     #     pygame.draw.rect(screen, WHITE, (50 + i * (CARD_WIDTH + 10), 100, CARD_WIDTH, CARD_HEIGHT))
     #     # You can add text here to display card rank/suit
@@ -261,7 +287,6 @@ while running:
     player_score = game.calculate_score(game.player_hand)
     dealer_score = game.calculate_score(game.dealer_hand)
    
-    font = pygame.font.Font(None, 36)
     # display score
     text_surface = font.render(f"Player Score: {player_score} | Dealer Score: {dealer_score}", True, WHITE)
     screen.blit(text_surface, (50, 50))
@@ -272,7 +297,11 @@ while running:
 
     # display money
     money_surface = font.render(f"Balance: {game.money}", True, WHITE)
-    screen.blit(money_surface, (50, HEIGHT * .85))
+    screen.blit(money_surface, (50, HEIGHT * .8))
+
+    # display current bet
+    curbet_surface = font.render(f"| Current Bet: {game.currentbet} ", True, WHITE)
+    screen.blit(curbet_surface, (money_surface.get_width() + 60, HEIGHT * .8))
 
 
     # Check for game over
@@ -281,7 +310,7 @@ while running:
         result_surface = font.render(result_text, True, WHITE)
         screen.blit(result_surface, (WIDTH // 2 - result_surface.get_width() // 2, HEIGHT // 2))
         print(f"MONI {game.money}\n")
-        screen.blit(money_surface, (50, HEIGHT * .85))
+        #screen.blit(money_surface, (50, HEIGHT * .85))
 
         pygame.display.flip()
         pygame.time.wait(2000)
@@ -289,8 +318,8 @@ while running:
         game.player_hand = []
         game.dealer_hand = []
         # re-display money after game over
-        money_surface = font.render(f"Balance: {game.money}", True, WHITE)
-        screen.blit(money_surface, (50, HEIGHT * .85))
+        #money_surface = font.render(f"Balance: {game.money}", True, WHITE)
+        #screen.blit(money_surface, (50, HEIGHT * .8))
         # get a new bet
         game.bet()
         # deal a new starting hand
