@@ -142,19 +142,6 @@ class Blackjack:
                                     print("Your bet amount is now $0, Try adding some money to bet with.")
                 
         
-            # try:
-            #     #amount = int(input(f"(Total Money = {self.money}) Enter Bet: \n"))
-            #     amount = 10
-            #     if amount > 0 and amount <= self.money:
-            #         print(f"You just bet ${amount}\n")
-            #         break
-            #     else:
-            #         print("The number must be greater than 0 and less than or equal to your money. Try again.")
-            # except ValueError:
-            #     print("That's not a valid number. Try again.")
-
-        self.currentbet = amount
-        self.money -= amount
 
     def deal_initlial(self):
         # Deal initial cards
@@ -162,6 +149,9 @@ class Blackjack:
             self.player_hand.append(self.deck.draw_card())
             self.dealer_hand.append(self.deck.draw_card())
             globals()["running_count"] += (self.player_hand[-1].RCvalue + self.dealer_hand[-1].RCvalue)
+        
+        if self.player_hand == 21 or self.dealer_hand == 21: 
+            self.game_over = True
 
     def calculate_score(self, hand):
         score = sum(card.value for card in hand)
@@ -177,7 +167,7 @@ class Blackjack:
             self.player_hand.append(self.deck.draw_card())
             globals()["running_count"] += self.player_hand[-1].RCvalue 
 
-            if self.calculate_score(self.player_hand) > 21:
+            if self.calculate_score(self.player_hand) >= 21:
                 self.game_over = True
 
     def dealer_play(self):
@@ -193,11 +183,11 @@ class Blackjack:
         if player_score > 21:
             # do nothing, current bet already subtracted from total money
             return "Player Busts! Dealer Wins!"
-        elif dealer_score > 21 or player_score > dealer_score:
+        elif dealer_score > 21 or player_score > dealer_score or player_score == 21:
             self.player_wins += 1
             self.money += (2 * self.currentbet) # add 2xcurrentbet to total money
             return "Player Wins!"
-        elif player_score < dealer_score:
+        elif player_score < dealer_score or dealer_score == 21:
             # do nothing, current bet already subtracted from total money
             return "Dealer Wins!"
         else:
@@ -217,9 +207,11 @@ screen.blit(pygame.transform.scale(pygame.image.load("table2.jpg"), (WIDTH, HEIG
 for chip in chip_list:
     screen.blit(chip.image, chip.button)
 
+# deal initial hand to player and dealer
 game.deal_initlial()
 pygame.display.flip()
 
+# get first bet before displaying cards
 game.bet()
 
 
@@ -245,15 +237,12 @@ while running:
                 game.player_hit()
             if event.key == pygame.K_s:  # Stand
                 game.dealer_play()
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            for chip in chip_list:
-                if chip.button_rect.collidepoint(mousepos):
-                    print("BUTTON CLICKED")
 
 
    
     # Draw the hands
     '''
+    Optional:
     To fix dealer card flip removing players hand during animation, combine both dealer hand and player hand list, 
     sort from already placed to not placed, first screen blit all the placed cards(dealer hand first, then player hand), then placed all unplaced cards (card flip) 
     '''
@@ -279,14 +268,13 @@ while running:
     for chip in chip_list:
         screen.blit(chip.image, chip.button)
 
-    # for i, card in enumerate(game.dealer_hand):
-    #     pygame.draw.rect(screen, WHITE, (50 + i * (CARD_WIDTH + 10), 100, CARD_WIDTH, CARD_HEIGHT))
-    #     # You can add text here to display card rank/suit
+
 
     # get scores
     player_score = game.calculate_score(game.player_hand)
     dealer_score = game.calculate_score(game.dealer_hand)
    
+    ''' DISPLAY SECTION: BEGIN '''
     # display score
     text_surface = font.render(f"Player Score: {player_score} | Dealer Score: {dealer_score}", True, WHITE)
     screen.blit(text_surface, (50, 50))
@@ -302,19 +290,20 @@ while running:
     # display current bet
     curbet_surface = font.render(f"| Current Bet: {game.currentbet} ", True, WHITE)
     screen.blit(curbet_surface, (money_surface.get_width() + 60, HEIGHT * .8))
+    ''' DISPLAY SECTION: END   '''
 
-
-    # Check for game over
+    # check for game over
     if game.game_over:
         result_text = game.check_winner()
+        # display results
         result_surface = font.render(result_text, True, WHITE)
         screen.blit(result_surface, (WIDTH // 2 - result_surface.get_width() // 2, HEIGHT // 2))
-        print(f"MONI {game.money}\n")
+        
         #screen.blit(money_surface, (50, HEIGHT * .85))
 
         pygame.display.flip()
         pygame.time.wait(2000)
-        # Reset player and dealer hands, deal 2 new cards to each 
+        # reset player and dealer hands, deal 2 new cards to each 
         game.player_hand = []
         game.dealer_hand = []
         # re-display money after game over
