@@ -7,8 +7,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import random
-import json
+import csv
 
+from CardDef import CARD_VALUES
 
 
 # (playerscore, dealerscore, truecount)
@@ -20,34 +21,64 @@ import json
 #         return "hit"
 #     print("Hi")
 
-
+# simulate a 1 deck blackjack game and record data
 class BlackjackSimulation:
     def __init__(self):
         self.player_hand = []
         self.dealer_hand = []
         self.running_count = 0
+        self.deck = self.createDeck()
         self.game_over = False
         self.player_wins = 0
 
-    def reset(self):
-        self.player_hand = []
-        self.dealer_hand = []
-        self.running_count = 0
+    def createDeck(self):
+        thisdeck = []
+        for cardvalue in CARD_VALUES.values():
+            for _ in range(4): # there are 4 cards with the same value/face per deck
+                thisdeck.append(cardvalue)
+        random.shuffle(thisdeck)
+        return thisdeck
+    
+    def popDeck(self):
+        #if deck is empty, reshuffle a new deck
+        if not self.deck: self.deck = self.createDeck()
+
+        card = self.deck.pop()
+        return card  
+    
+    def updateRC(self, cardvalue):
+        # adjust running count for card being sent through
+        if cardvalue >= 2 and cardvalue <= 6: self.running_count += 1
+        elif cardvalue == 1 or cardvalue >= 10: self.running_count -= 1
+
+
+    def reset(self, code=""):
+        match code:
+            case "full":
+                self.deck = self.createDeck()
+                self.running_count = 0
+            case _:     
+                self.player_hand = []
+                self.dealer_hand = []
+                #self.running_count = 0
 
 
     def deal_initlial(self):
         # deal random initial cards, from values 1-10, to make more complex, could incorporate card suits and an actual deck of cards,
         # but since we are having our AI determine based on player hand total and dealer hand total this will do just fine
         for i in range(2):
-            self.player_hand.append(random.randint(1,10))
-            self.dealer_hand.append(random.randint(1,10))
+            self.player_hand.append(self.popDeck())
+            self.dealer_hand.append(self.popDeck())
+            self.updateRC(self.player_hand[i])
+            self.updateRC(self.dealer_hand[i])
+        '''
             # adjust running count for player card[i]
-            if self.player_hand[i] >= 2 and self.player_hand[i] <= 6: self.running_count += 1
-            elif self.player_hand[i] == 1 or self.player_hand == 10: self.running_count -= 1
+            if cardvalue >= 2 and cardvalue <= 6: self.running_count += 1
+            elif cardvalue == 1 or cardvalue >= 10: self.running_count -= 1
             # adjust running count for dealer card[i]
-            if self.dealer_hand[i] >= 2 and self.dealer_hand[i] <= 6: self.running_count += 1
-            elif self.dealer_hand[i] == 1 or self.dealer_hand == 10: self.running_count -= 1
-
+            if cardvalue >= 2 and cardvalue <= 6: self.running_count += 1
+            elif cardvalue == 1 or cardvalue >= 10: self.running_count -= 1
+        '''
         
         if self.player_hand == 21 or self.dealer_hand == 21: 
             self.game_over = True
@@ -71,7 +102,9 @@ class BlackjackSimulation:
                 # append action
                 Y.append(action)
 
-                if action: self.player_hand.append(random.randint(1,10))
+                if action: 
+                    self.player_hand.append(self.popDeck())
+                    self.updateRC(self.player_hand[-1])
                 else: break
 
             self.reset()
@@ -81,13 +114,14 @@ class BlackjackSimulation:
     # runs the simulation and stores data into a local json file
     def storeData(self):
         X, Y = self.getData(100)
-        data = {"X values": X, "Y values": Y}
-        with open("BlackjackSimulationData.json", "w") as file:
-            json.dump(data, file)
+        data = X
+        with open("BlackjackSimulationData.csv", "w") as file:
+            csv.writer(file).writerows(data)
+        
 
 
 
-
+# playerhand, dealerhand, running counting, (action, win/loss)
 
 
 
