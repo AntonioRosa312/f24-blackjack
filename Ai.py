@@ -39,12 +39,14 @@ class BlackjackSimulation:
         random.shuffle(thisdeck)
         return thisdeck
     
-    def popDeck(self):
-        #if deck is empty, reshuffle a new deck
-        if not self.deck: self.deck = self.createDeck()
+    # def popDeck(self):
+    #     #if deck is empty, reshuffle a new deck
+    #     if not self.deck: 
+    #         self.deck = self.createDeck()
+    #         return "empty"
 
-        card = self.deck.pop()
-        return card  
+    #     card = self.deck.pop()
+    #     return card  
     
     def updateRC(self, cardvalue):
         # adjust running count for card being sent through
@@ -53,22 +55,21 @@ class BlackjackSimulation:
 
 
     def reset(self, code=""):
-        match code:
-            case "full":
-                self.deck = self.createDeck()
-                self.running_count = 0
-            case _:     
-                self.player_hand = []
-                self.dealer_hand = []
-                #self.running_count = 0
+        if code == "full":
+            self.deck = self.createDeck()
+            self.running_count = 0
+
+        self.player_hand = []
+        self.dealer_hand = []
 
 
     def deal_initlial(self):
         # deal random initial cards, from values 1-10, to make more complex, could incorporate card suits and an actual deck of cards,
         # but since we are having our AI determine based on player hand total and dealer hand total this will do just fine
         for i in range(2):
-            self.player_hand.append(self.popDeck())
-            self.dealer_hand.append(self.popDeck())
+            if len(self.deck) < 2: return "empty"
+            self.player_hand.append(self.deck.pop())
+            self.dealer_hand.append(self.deck.pop())
             self.updateRC(self.player_hand[i])
             self.updateRC(self.dealer_hand[i])
         '''
@@ -89,8 +90,13 @@ class BlackjackSimulation:
     def getData(self, samples = 100):
         X, Y = [], []
         for _ in range(samples):
-            print("working")
-            self.deal_initlial()
+            print(f"working - deck length: {len(self.deck)}")
+            
+            # if we run into the issue of running out of cards for the 1 shoe, then simply restart 
+            if self.deal_initlial() == "empty":
+                self.reset("full")
+                self.deal_initlial()
+
             while (sum(self.player_hand) < 21):
                 # having stand and hit as integers is better for nn processing
                 action = random.choice([0, 1]) #stand = 0, hit = 1
@@ -102,13 +108,14 @@ class BlackjackSimulation:
                 # append action
                 Y.append(action)
 
-                if action: 
-                    self.player_hand.append(self.popDeck())
+                # if action=1=hit and the deck is not empty, then append card to players hand
+                if action and self.deck: 
+                    self.player_hand.append(self.deck.pop())
                     self.updateRC(self.player_hand[-1])
                 else: break
 
             self.reset()
-        
+
         return (X,Y)
 
     # runs the simulation and stores data into a local json file
