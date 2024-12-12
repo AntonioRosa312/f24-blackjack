@@ -4,10 +4,17 @@ import random
 
 from CardDef import *
 from ChipDef import *
+from Ai import BlackjackSimulation
 #from generalDef import *
 #PLAYING CARDS https://code.google.com/archive/p/vector-playing-cards/downloads
 #https://wizardofodds.com/games/blackjack/card-counting/high-low/
 #https://www.vecteezy.com/vector-art/1609940-poker-chips-set-isolated-white-background
+
+
+
+blackjacksim = BlackjackSimulation()
+blackjacksim.storeData()
+
 
 # Initialize Pygame
 pygame.init()
@@ -75,8 +82,8 @@ class Blackjack:
             self.game_over = True
             exit
         
-        print("Press the \'ENTER\' key to confirm bet")
-
+        
+        # THIS IS FOR USER
         while True:
             ''' DISPLAY SECTION: BEGIN '''
             # display table
