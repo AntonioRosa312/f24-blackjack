@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import numpy as np
 import random
 import csv
+import pandas as pd
 
 from CardDef import CARD_VALUES
 
@@ -86,9 +87,9 @@ class BlackjackSimulation:
 
 
     # for the initial 4 cards, there are 52P4 (52 permute 4) = 6,497,400 possibilities,
-    # we will just run through 10000(samples) possibilities.
-    def getData(self, samples = 100):
-        X, Y = [], []
+    # we will just run through 1000(samples) possibilities.
+    def getData(self, samples = 1000):
+        data = []
         for _ in range(samples):
             print(f"working - deck length: {len(self.deck)}")
             
@@ -103,10 +104,8 @@ class BlackjackSimulation:
 
                 ''' send action into a calculate win/loss function and pass to Y ?'''
 
-                # append [player_score, dealer_score, running_count]
-                X.append( [sum(self.player_hand), sum(self.dealer_hand), self.running_count] )
-                # append action
-                Y.append(action)
+                # append [player_score, dealer_score, running_count, action]
+                data.append( [sum(self.player_hand), sum(self.dealer_hand), self.running_count, action] )
 
                 # if action=1=hit and the deck is not empty, then append card to players hand
                 if action and self.deck: 
@@ -116,15 +115,20 @@ class BlackjackSimulation:
 
             self.reset()
 
-        return (X,Y)
+        return data
 
-    # runs the simulation and stores data into a local json file
+    # runs the simulation and stores data into a local csv file
     def storeData(self):
-        X, Y = self.getData(100)
-        data = X
-        with open("BlackjackSimulationData.csv", "w") as file:
+        fieldnames = ["Player score", "Dealer score", "Running count", "Action"]
+        data = self.getData(1000)
+        
+        with open("BlackjackSimulationData.csv", 'w') as file:
+            csv.writer(file).writerow(fieldnames)
             csv.writer(file).writerows(data)
         
+    def retrieveData(self):
+        data = pd.read_csv("BlackjackSimulationData.csv")
+        print(data.head())
 
 
 
