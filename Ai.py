@@ -6,6 +6,7 @@ import torch.nn as nn
 #import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import numpy as np
+from sklearn.model_selection import train_test_split
 import random
 import csv
 import pandas as pd
@@ -91,7 +92,7 @@ class BlackjackSimulation:
     def getData(self, samples = 1000):
         data = []
         for _ in range(samples):
-            print(f"working - deck length: {len(self.deck)}")
+            #print(f"working - deck length: {len(self.deck)}")
             
             # if we run into the issue of running out of cards for the 1 shoe, then simply restart 
             if self.deal_initlial() == "empty":
@@ -129,6 +130,8 @@ class BlackjackSimulation:
     def retrieveData(self):
         data = pd.read_csv("BlackjackSimulationData.csv")
         print(data.head())
+        print(f"\nlength of data: {len(data)}\n")
+        return data
 
 
 
@@ -186,58 +189,89 @@ class MyNet(nn.Module):
     # Output (action [stand, hit])
 
                                 # set size of hidden layers 1 & 2
-    def __init_(self, input_features = 3, HL1 = 32, HL2 = 32, output_features = 2):
+    def __init__(self, input_features = 3, HL1 = 32, HL2 = 32, output_features = 2):
         super(MyNet, self).__init__()
    
-        self.fc1 = nn.Linear(input_features, HL1)
-        self.fc2 = nn.Linear(HL1, HL2)
-        self.out = nn.Linear(HL2, output_features)
-    
+        # self.fc1 = nn.Linear(input_features, HL1)
+        # self.fc2 = nn.Linear(HL1, HL2)
+        # self.out = nn.Linear(HL2, output_features)
+        
+        self.nn = nn.Sequential(
+            nn.LazyLinear(input_features, HL1),
+            nn.ReLU(),
+            nn.LazyLinear(HL1, HL2),
+            nn.ReLU(),
+            nn.LazyLinear(HL2, output_features)
+        )
     def forward(self, x):
-        x = nn.ReLU(self.fc1(x))
-        x = nn.ReLU(self.fc2(x))
-        x = self.out(x)
-        return x
+        # x = nn.ReLU(self.fc1(x))
+        # x = nn.ReLU(self.fc2(x))
+        # x = self.out(x)
+        # return x
+        return self.nn(x)
 
 
-torch.manual_seed(1000)
+torch.manual_seed(100)
 network = MyNet()
-'''
-# train test split X,Y
-X = my_df.drop("action", axis = 1)
-Y = my_df["action"]
+
+print(f"This is network param: {list(network.parameters())}")
+
+
+BlackjackDATA = BlackjackSimulation()
+BlackjackDATA.storeData()
+data = BlackjackDATA.retrieveData()
+
+# train & test split, X,y                                 #"WinLoss"
+X = data[["Player score", "Dealer score", "Running count"]]#my_df.drop("action", axis = 1)
+print(X)
+y = data["Action"]
+print(y)
 # convert to numpy arrays
 X = X.values
-Y = Y.values
+y = y.values
+print(y)
 
-from sklearn.model_selection import train_test_split
 # train test split                                        test_size = 20%, train_size = 80%
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = .2)
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = .7)#test_size = .2)
+
+
+
+# # convert X features to tensors
+# X_train = torch.tensor(X_train)
+# X_test = torch.tensor(X_test)
+
+# # convert y features to tensors
+# y_train = torch.tensor(y_train)
+# y_test = torch.tensor(y_test)
+
 
 # convert X features to float tensors
 X_train = torch.FloatTensor(X_train)
 X_test = torch.FloatTensor(X_test)
 
 # convert Y features to float tensors
-Y_train = torch.FloatTensor(Y_train)
-Y_test = torch.FlaotTensor(Y_test)
+y_train = torch.FloatTensor(y_train)
+y_test = torch.FloatTensor(y_test)
 
 # set criterion of network to measure the error, how far off the predictions are from the data
 criterion = nn.CrossEntropyLoss()
+#criterion = nn.MSELoss
+
 # optimizer (Adam) and learning rate (if error doesn't go down after a bunch of iterations (epochs), lower our learning rate)
-optimizer = torch.optim.Adam(network.parameters(), lr = .01)
+optimizer = torch.optim.Adam(network.parameters(), lr=.01)
 
 losses = []
 # train the network, each epoch is a run through our network with all the data
 for epoch in range(10):
     # go forward and get a prediction
-    Y_prediction = network.forward(X_train) # get predicted results
+    y_prediction = network.forward(X_train) # get predicted results
 
     # measure the loss/error, going to be high at first
-    loss = criterion(Y_prediction, Y_train) # predicted values vs Y_train values
+    loss = criterion(y_prediction, y_train) # predicted values vs Y_train values
 
     # keep track of losses
-    losses.append(loss)
+    #loss is a tensor, transform back to numpy array
+    losses.append(loss.detach().numpy())
 
     # print every epoch
     print(f"Epoch #{epoch} and loss: {loss}")
@@ -250,4 +284,3 @@ for epoch in range(10):
     # take a step with the optimizer
     optimizer.step()
 
-    '''
