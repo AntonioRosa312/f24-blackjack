@@ -41,14 +41,6 @@ class BlackjackSimulation:
         random.shuffle(thisdeck)
         return thisdeck
     
-    # def popDeck(self):
-    #     #if deck is empty, reshuffle a new deck
-    #     if not self.deck: 
-    #         self.deck = self.createDeck()
-    #         return "empty"
-
-    #     card = self.deck.pop()
-    #     return card  
     
     def updateRC(self, cardvalue):
         # adjust running count for card being sent through
@@ -74,44 +66,91 @@ class BlackjackSimulation:
             self.dealer_hand.append(self.deck.pop())
             self.updateRC(self.player_hand[i])
             self.updateRC(self.dealer_hand[i])
-        '''
-            # adjust running count for player card[i]
-            if cardvalue >= 2 and cardvalue <= 6: self.running_count += 1
-            elif cardvalue == 1 or cardvalue >= 10: self.running_count -= 1
-            # adjust running count for dealer card[i]
-            if cardvalue >= 2 and cardvalue <= 6: self.running_count += 1
-            elif cardvalue == 1 or cardvalue >= 10: self.running_count -= 1
-        '''
         
         if self.player_hand == 21 or self.dealer_hand == 21: 
-            self.game_over = True
+            return "21"
 
+
+    def check_winner(self, action):
+        player_score = sum(self.player_hand)
+        dealer_score = sum(self.dealer_hand)
+
+        if action==1:
+            card = self.deck.pop()
+            if (sum(self.player_hand) + card) > 21: 
+                winloss = 0 #if the player bust then its considered a loss/bad move
+                #data.append( [sum(self.player_hand), sum(self.dealer_hand), self.running_count, winloss, action] )
+            else: 
+                winloss = 1 #if player can hit and not bust, then its a good move
+                
+                #data.append( [sum(self.player_hand), sum(self.dealer_hand), self.running_count, winloss, action] )
+                #self.player_hand.append(card) #since you can add this card to players hand with out a bust, then do that and keep going on with that hand for more data
+
+
+        #check for stand
+        if action==0:
+            card = None
+            if sum(self.dealer_hand) > sum(self.player_hand):
+                winloss = 0
+            # card = self.deck.pop()
+            # if (sum(self.dealer_hand) + card) > sum(self.player_hand) and (sum(self.dealer_hand) + card) < 21: 
+            #     winloss = 0 #if the dealer bust then its considered a loss/bad move
+            #     return winloss
+            #     data.append( [sum(self.player_hand), sum(self.dealer_hand), self.running_count, winloss, action] )
+            else: 
+                winloss = 1 #if player can hit and not bust, then its a good move
+                #data.append( [sum(self.player_hand), sum(self.dealer_hand), self.running_count, winloss, action] )
+                #self.player_hand.append(card) #since you can add this card to players hand with out a bust, then do that and keep going on with that hand for more data
+        
+        return winloss, card
+
+
+        if player_score > 21:
+            # do nothing, current bet already subtracted from total money
+            return "Player Busts! Dealer Wins!"
+        elif dealer_score > 21 or player_score > dealer_score or player_score == 21:
+            self.player_wins += 1
+            self.money += (2 * self.currentbet) # add 2xcurrentbet to total money
+            return "Player Wins!"
+        elif player_score < dealer_score or dealer_score == 21:
+            # do nothing, current bet already subtracted from total money
+            return "Dealer Wins!"
+        else:
+            self.money += self.currentbet # add back currentbet to total money
+            return "It's a Tie!"
 
     # for the initial 4 cards, there are 52P4 (52 permute 4) = 6,497,400 possibilities,
     # we will just run through 1000(samples) possibilities.
     def getData(self, samples = 1000):
         data = []
         for _ in range(samples):
-            #print(f"working - deck length: {len(self.deck)}")
             
-            # if we run into the issue of running out of cards for the 1 shoe, then simply restart 
-            if self.deal_initlial() == "empty":
-                self.reset("full")
-                self.deal_initlial()
+            match self.deal_initlial():
+                # if we run into the issue of running out of cards for the 1 shoe, then simply restart 
+                case "empty":
+                    self.reset("full")
+                    self.deal_initlial()
+                # if we run into the issue of dealing a 21 for either player or dealer, then simply deal a new hand
+                case "21":
+                    self.reset()
+                    self.deal_initlial()
+                case _: pass
+            
 
             while (sum(self.player_hand) < 21):
                 # having stand and hit as integers is better for nn processing
                 action = random.choice([0, 1]) #stand = 0, hit = 1
 
-                ''' send action into a calculate win/loss function and pass to Y ?'''
+                if (not self.deck): break #if deck is empty, break out of while loop where it will do a reset(full)
 
-                # append [player_score, dealer_score, running_count, action]
-                data.append( [sum(self.player_hand), sum(self.dealer_hand), self.running_count, action] )
+                winloss, cardpopped = self.check_winner(action)
 
+                data.append( [sum(self.player_hand), sum(self.dealer_hand), self.running_count, winloss, action] )
+                
                 # if action=1=hit and the deck is not empty, then append card to players hand
-                if action and self.deck: 
-                    self.player_hand.append(self.deck.pop())
-                    self.updateRC(self.player_hand[-1])
+                if action: 
+                    self.player_hand.append(cardpopped)
+                    self.updateRC(self.player_hand[-1]) #same thing as cardpopped
                 else: break
 
             self.reset()
@@ -120,7 +159,7 @@ class BlackjackSimulation:
 
     # runs the simulation and stores data into a local csv file
     def storeData(self):
-        fieldnames = ["Player score", "Dealer score", "Running count", "Action"]
+        fieldnames = ["Player score", "Dealer score", "Running count", "WinLoss", "Action"]
         data = self.getData(1000)
         
         with open("BlackjackSimulationData.csv", 'w') as file:
@@ -183,13 +222,13 @@ class BlackjackSimulation:
 
 # create the model class using the nn.Module
 class MyNet(nn.Module):
-    # Input layer (player total, dealer total, running count) -->
+    # Input layer (player total, dealer total, running count, winloss) -->
     # Hidden layer 1 (number of nuerons) -->
     # Hideen layer 2 (number of nuerons) -->
     # Output (action [stand, hit])
 
                                 # set size of hidden layers 1 & 2
-    def __init__(self, input_features = 3, HL1 = 32, HL2 = 32, output_features = 2):
+    def __init__(self, input_features = 4, HL1 = 32, HL2 = 32, output_features = 2):
         super(MyNet, self).__init__()
    
         # self.fc1 = nn.Linear(input_features, HL1)
@@ -211,7 +250,7 @@ class MyNet(nn.Module):
         return self.nn(x)
 
 
-torch.manual_seed(100)
+torch.manual_seed(1000)
 network = MyNet()
 
 print(f"This is network param: {list(network.parameters())}")
@@ -221,8 +260,8 @@ BlackjackDATA = BlackjackSimulation()
 BlackjackDATA.storeData()
 data = BlackjackDATA.retrieveData()
 
-# train & test split, X,y                                 #"WinLoss"
-X = data[["Player score", "Dealer score", "Running count"]]#my_df.drop("action", axis = 1)
+# train & test split, X,y                                 
+X = data[["Player score", "Dealer score", "Running count", "WinLoss"]]
 print(X)
 y = data["Action"]
 print(y)
@@ -231,8 +270,8 @@ X = X.values
 y = y.values
 print(y)
 
-# train test split                                        test_size = 20%, train_size = 80%
-X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = .7)#test_size = .2)
+# train test split                                        test_size = 30%, train_size = 70%
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = .7)#test_size = .3)
 
 
 
@@ -249,9 +288,9 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = .7)#test_
 X_train = torch.FloatTensor(X_train)
 X_test = torch.FloatTensor(X_test)
 
-# convert Y features to float tensors
-y_train = torch.FloatTensor(y_train)
-y_test = torch.FloatTensor(y_test)
+# convert Y features to long tensors
+y_train = torch.LongTensor(y_train)
+y_test = torch.LongTensor(y_test)
 
 # set criterion of network to measure the error, how far off the predictions are from the data
 criterion = nn.CrossEntropyLoss()
@@ -262,7 +301,7 @@ optimizer = torch.optim.Adam(network.parameters(), lr=.01)
 
 losses = []
 # train the network, each epoch is a run through our network with all the data
-for epoch in range(10):
+for epoch in range(50):
     # go forward and get a prediction
     y_prediction = network.forward(X_train) # get predicted results
 
@@ -284,3 +323,17 @@ for epoch in range(10):
     # take a step with the optimizer
     optimizer.step()
 
+
+# send test data into model, without adjusting any weights
+with torch.no_grad(): # this turns off back propogration so it doesn't go backwards into model and mess with the weights
+    y_evaluation = network.forward(X_test) #send test data through network
+    losss= criterion(y_evaluation, y_test)
+    print(losss)
+
+
+with torch.no_grad():
+    test_input = torch.FloatTensor([[20, 17, 3, 1]])  # Ensure 2D input
+    test_output = network(test_input)
+    print(test_output)
+    predicted_class = torch.argmax(test_output, dim=1).item()
+    print(f"Custom Input Prediction: {predicted_class} (0=Stand, 1=Hit)")
