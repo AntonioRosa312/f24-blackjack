@@ -39,12 +39,13 @@ running_count = 0
 #true_count = running_count/totalnumberofdecks
 
 AI = argParse()
-
+print(AI)
 if AI:
+    network = MyNet()
     BlackjackDATA = BlackjackSimulation()
     BlackjackDATA.storeData()
     data = BlackjackDATA.retrieveData()
-    trainNetwork(data)
+    trainNetwork(data, network)
     
     
 
@@ -114,6 +115,11 @@ class Blackjack:
 
             pygame.display.flip()
             ''' DISPLAY SECTION: END   '''
+
+            if AI:
+                self.currentbet = 10
+                self.money -= amount
+                return
 
             mousepos = pygame.mouse.get_pos()
 
@@ -207,6 +213,9 @@ class Blackjack:
         else:
             self.money += self.currentbet # add back currentbet to total money
             return "It's a Tie!"
+        
+    def getGameState(self):
+        return [self.calculate_score(self.player_hand), self.calculate_score(self.dealer_hand), running_count, 1]
 
 
 # Initialize the game
@@ -246,12 +255,19 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.KEYDOWN:
+
+        if AI:
+            AIaction = sendToNetwork(game.getGameState(), network)
+            if AIaction == 1:   # Hit
+                game.player_hit()
+            if AIaction == 0:   # Stand
+                game.dealer_play()
+
+        elif event.type == pygame.KEYDOWN and not AI:
             if event.key == pygame.K_h:  # Hit
                 game.player_hit()
             if event.key == pygame.K_s:  # Stand
                 game.dealer_play()
-
 
    
     # Draw the hands
@@ -281,7 +297,6 @@ while running:
     # display chips on table
     for chip in chip_list:
         screen.blit(chip.image, chip.button)
-
 
 
     # get scores

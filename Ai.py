@@ -197,16 +197,18 @@ class MyNet(nn.Module):
         # return x
         return self.nn(x)
 
+'''
+# torch.manual_seed(1000)
+# network = MyNet()
 
-torch.manual_seed(1000)
-network = MyNet()
 
+# BlackjackDATA = BlackjackSimulation()
+# BlackjackDATA.storeData()
+# data = BlackjackDATA.retrieveData()
+'''
 
-BlackjackDATA = BlackjackSimulation()
-BlackjackDATA.storeData()
-data = BlackjackDATA.retrieveData()
-
-def trainNetwork(data):
+def trainNetwork(data, network):
+    torch.manual_seed(1000)
     # train & test split, X,y                                 
     X = data[["Player score", "Dealer score", "Running count", "WinLoss"]]
     y = data["Action"]
@@ -274,13 +276,13 @@ def trainNetwork(data):
 #     losss= criterion(y_evaluation, y_test)
 #     print(losss)
 
-def sendToNetwork(gamestate):
+def sendToNetwork(gamestate, network):
     #gamestate consists of ["Player score", "Dealer score", "Running count", "WinLoss"], ex. [20, 17, 3, 1]
     with torch.no_grad():
         #test_input = torch.FloatTensor([gamestate])  # Ensure 2D input
         test_output = network(torch.FloatTensor([gamestate]))
         action = torch.argmax(test_output, dim=1).item()
-        print(f"Custom Input Prediction: {action} (0=Stand, 1=Hit)")
+        print(f"With gamestate: {gamestate} Custom Input Prediction: {action} (0=Stand, 1=Hit)")
         return action
 
 #run = sendToNetwork([20, 17, 3, 1])
