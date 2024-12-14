@@ -4,17 +4,19 @@ import random
 
 from CardDef import *
 from ChipDef import *
-from Ai import BlackjackSimulation
+from Ai import *
 #from generalDef import *
 #PLAYING CARDS https://code.google.com/archive/p/vector-playing-cards/downloads
 #https://wizardofodds.com/games/blackjack/card-counting/high-low/
 #https://www.vecteezy.com/vector-art/1609940-poker-chips-set-isolated-white-background
 
 
-
+'''
 blackjacksim = BlackjackSimulation()
+print(blackjacksim.deck)
 blackjacksim.storeData()
-
+blackjacksim.retrieveData()
+'''
 
 # Initialize Pygame
 pygame.init()
@@ -37,9 +39,14 @@ running_count = 0
 #true_count = running_count/totalnumberofdecks
 
 AI = argParse()
-print(AI)
 
-
+if AI:
+    BlackjackDATA = BlackjackSimulation()
+    BlackjackDATA.storeData()
+    data = BlackjackDATA.retrieveData()
+    trainNetwork(data)
+    
+    
 
 # Card class
 class Card:

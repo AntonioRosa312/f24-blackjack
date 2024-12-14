@@ -14,14 +14,6 @@ import pandas as pd
 from CardDef import CARD_VALUES
 
 
-# (playerscore, dealerscore, truecount)
-# Illustrious18 = {(16,10,0): "stand", }
-
-
-# def AIdecision():
-#     if(playerhand <= 11):
-#         return "hit"
-#     print("Hi")
 
 # simulate a 1 deck blackjack game and record data
 class BlackjackSimulation:
@@ -174,50 +166,6 @@ class BlackjackSimulation:
 
 
 
-# playerhand, dealerhand, running counting, (action, win/loss)
-
-
-
-    # def calculate_score(self, hand):
-    #     score = sum(card.value for card in hand)
-    #     # Adjust for Aces
-    #     aces = sum(1 for card in hand if card.rank == "ace")
-    #     while score > 21 and aces:
-    #         score -= 10
-    #         aces -= 1
-    #     return score
-
-    # def player_hit(self):
-    #     if not self.game_over:
-    #         self.player_hand.append(self.deck.draw_card())
-    #         globals()["running_count"] += self.player_hand[-1].RCvalue 
-
-    #         if self.calculate_score(self.player_hand) >= 21:
-    #             self.game_over = True
-
-    # def dealer_play(self):
-    #     while self.calculate_score(self.dealer_hand) < 17:
-    #         self.dealer_hand.append(self.deck.draw_card())
-    #         globals()["running_count"] += self.dealer_hand[-1].RCvalue
-
-    #     self.game_over = True
-
-    # def check_winner(self):
-    #     player_score = self.calculate_score(self.player_hand)
-    #     dealer_score = self.calculate_score(self.dealer_hand)
-    #     if player_score > 21:
-    #         # do nothing, current bet already subtracted from total money
-    #         return "Player Busts! Dealer Wins!"
-    #     elif dealer_score > 21 or player_score > dealer_score or player_score == 21:
-    #         self.player_wins += 1
-    #         self.money += (2 * self.currentbet) # add 2xcurrentbet to total money
-    #         return "Player Wins!"
-    #     elif player_score < dealer_score or dealer_score == 21:
-    #         # do nothing, current bet already subtracted from total money
-    #         return "Dealer Wins!"
-    #     else:
-    #         self.money += self.currentbet # add back currentbet to total money
-    #         return "It's a Tie!"
 
 
 # create the model class using the nn.Module
@@ -253,87 +201,86 @@ class MyNet(nn.Module):
 torch.manual_seed(1000)
 network = MyNet()
 
-print(f"This is network param: {list(network.parameters())}")
-
 
 BlackjackDATA = BlackjackSimulation()
 BlackjackDATA.storeData()
 data = BlackjackDATA.retrieveData()
 
-# train & test split, X,y                                 
-X = data[["Player score", "Dealer score", "Running count", "WinLoss"]]
-print(X)
-y = data["Action"]
-print(y)
-# convert to numpy arrays
-X = X.values
-y = y.values
-print(y)
+def trainNetwork(data):
+    # train & test split, X,y                                 
+    X = data[["Player score", "Dealer score", "Running count", "WinLoss"]]
+    y = data["Action"]
 
-# train test split                                        test_size = 30%, train_size = 70%
-X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = .7)#test_size = .3)
+    # convert to numpy arrays
+    X = X.values
+    y = y.values
 
+    # train test split                                        test_size = 30%, train_size = 70%
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = .7)#test_size = .3)
 
 
-# # convert X features to tensors
-# X_train = torch.tensor(X_train)
-# X_test = torch.tensor(X_test)
+    # # convert X features to tensors
+    # X_train = torch.tensor(X_train)
+    # X_test = torch.tensor(X_test)
 
-# # convert y features to tensors
-# y_train = torch.tensor(y_train)
-# y_test = torch.tensor(y_test)
+    # # convert y features to tensors
+    # y_train = torch.tensor(y_train)
+    # y_test = torch.tensor(y_test)
 
 
-# convert X features to float tensors
-X_train = torch.FloatTensor(X_train)
-X_test = torch.FloatTensor(X_test)
+    # convert X features to float tensors
+    X_train = torch.FloatTensor(X_train)
+    X_test = torch.FloatTensor(X_test)
 
-# convert Y features to long tensors
-y_train = torch.LongTensor(y_train)
-y_test = torch.LongTensor(y_test)
+    # convert Y features to long tensors
+    y_train = torch.LongTensor(y_train)
+    y_test = torch.LongTensor(y_test)
 
-# set criterion of network to measure the error, how far off the predictions are from the data
-criterion = nn.CrossEntropyLoss()
-#criterion = nn.MSELoss
+    # set criterion of network to measure the error, how far off the predictions are from the data
+    criterion = nn.CrossEntropyLoss()
+    #criterion = nn.MSELoss
 
-# optimizer (Adam) and learning rate (if error doesn't go down after a bunch of iterations (epochs), lower our learning rate)
-optimizer = torch.optim.Adam(network.parameters(), lr=.01)
+    # optimizer (Adam) and learning rate (if error doesn't go down after a bunch of iterations (epochs), lower our learning rate)
+    optimizer = torch.optim.Adam(network.parameters(), lr=.01)
 
-losses = []
-# train the network, each epoch is a run through our network with all the data
-for epoch in range(50):
-    # go forward and get a prediction
-    y_prediction = network.forward(X_train) # get predicted results
+    losses = []
+    # train the network, each epoch is a run through our network with all the data
+    for epoch in range(50):
+        # go forward and get a prediction
+        y_prediction = network.forward(X_train) # get predicted results
 
-    # measure the loss/error, going to be high at first
-    loss = criterion(y_prediction, y_train) # predicted values vs Y_train values
+        # measure the loss/error, going to be high at first
+        loss = criterion(y_prediction, y_train) # predicted values vs Y_train values
 
-    # keep track of losses
-    #loss is a tensor, transform back to numpy array
-    losses.append(loss.detach().numpy())
+        # keep track of losses
+        #loss is a tensor, transform back to numpy array
+        losses.append(loss.detach().numpy())
 
-    # print every epoch
-    print(f"Epoch #{epoch} and loss: {loss}")
+        # print every epoch to see stabilization 
+        print(f"Epoch #{epoch} and loss: {loss}")
 
-    # do some back propagation which takes the error rate of forward propagation and feeds it back through the network to fine tune the weights
-    # zero out the gradients
-    optimizer.zero_grad()
-    # do the backward pass
-    loss.backward()
-    # take a step with the optimizer
-    optimizer.step()
+        # do some back propagation which takes the error rate of forward propagation and feeds it back through the network to fine tune the weights
+        # zero out the gradients
+        optimizer.zero_grad()
+        # do the backward pass
+        loss.backward()
+        # take a step with the optimizer
+        optimizer.step()
 
 
 # send test data into model, without adjusting any weights
-with torch.no_grad(): # this turns off back propogration so it doesn't go backwards into model and mess with the weights
-    y_evaluation = network.forward(X_test) #send test data through network
-    losss= criterion(y_evaluation, y_test)
-    print(losss)
+# with torch.no_grad(): # this turns off back propogration so it doesn't go backwards into model and mess with the weights
+#     y_evaluation = network.forward(X_test) #send test data through network
+#     losss= criterion(y_evaluation, y_test)
+#     print(losss)
 
+def sendToNetwork(gamestate):
+    #gamestate consists of ["Player score", "Dealer score", "Running count", "WinLoss"], ex. [20, 17, 3, 1]
+    with torch.no_grad():
+        #test_input = torch.FloatTensor([gamestate])  # Ensure 2D input
+        test_output = network(torch.FloatTensor([gamestate]))
+        action = torch.argmax(test_output, dim=1).item()
+        print(f"Custom Input Prediction: {action} (0=Stand, 1=Hit)")
+        return action
 
-with torch.no_grad():
-    test_input = torch.FloatTensor([[20, 17, 3, 1]])  # Ensure 2D input
-    test_output = network(test_input)
-    print(test_output)
-    predicted_class = torch.argmax(test_output, dim=1).item()
-    print(f"Custom Input Prediction: {predicted_class} (0=Stand, 1=Hit)")
+#run = sendToNetwork([20, 17, 3, 1])
