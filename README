@@ -1,0 +1,14 @@
+Start off by installing the python libraries below if not installed already.
+
+Install pygame #https://www.pygame.org/wiki/GettingStarted
+Install scikit-learn #https://scikit-learn.org/1.5/getting_started.html
+Install pytorch #https://pytorch.org/get-started/locally/
+Install pandas #https://pandas.pydata.org/docs/getting_started/install.html
+Install numpy #https://numpy.org/install/
+
+This is an implementation of a card coutning Ai with the use of 1 Deck.
+To run the game and play without the AI agent, type "python .\Blackjack.py -standard" or simply "python .\Blackjack.py"
+into the terminal, while being inside the corresponding file directory.
+Otherwise,
+To run the game and play with the AI agent, type "python .\Blackjack.py -ai" 
+into the terminal, while being inside the corresponding file directory.

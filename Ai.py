@@ -64,8 +64,6 @@ class BlackjackSimulation:
 
 
     def check_winner(self, action):
-        player_score = sum(self.player_hand)
-        dealer_score = sum(self.dealer_hand)
 
         if action==1:
             card = self.deck.pop()
@@ -97,20 +95,6 @@ class BlackjackSimulation:
         return winloss, card
 
 
-        if player_score > 21:
-            # do nothing, current bet already subtracted from total money
-            return "Player Busts! Dealer Wins!"
-        elif dealer_score > 21 or player_score > dealer_score or player_score == 21:
-            self.player_wins += 1
-            self.money += (2 * self.currentbet) # add 2xcurrentbet to total money
-            return "Player Wins!"
-        elif player_score < dealer_score or dealer_score == 21:
-            # do nothing, current bet already subtracted from total money
-            return "Dealer Wins!"
-        else:
-            self.money += self.currentbet # add back currentbet to total money
-            return "It's a Tie!"
-
     # for the initial 4 cards, there are 52P4 (52 permute 4) = 6,497,400 possibilities,
     # we will just run through 1000(samples) possibilities.
     def getData(self, samples = 1000):
@@ -118,7 +102,7 @@ class BlackjackSimulation:
         for _ in range(samples):
             
             match self.deal_initlial():
-                # if we run into the issue of running out of cards for the 1 shoe, then simply restart 
+                # if we run into the issue of running out of cards for the 1 deck, then simply restart 
                 case "empty":
                     self.reset("full")
                     self.deal_initlial()
@@ -197,15 +181,7 @@ class MyNet(nn.Module):
         # return x
         return self.nn(x)
 
-'''
-# torch.manual_seed(1000)
-# network = MyNet()
 
-
-# BlackjackDATA = BlackjackSimulation()
-# BlackjackDATA.storeData()
-# data = BlackjackDATA.retrieveData()
-'''
 
 def trainNetwork(data, network):
     torch.manual_seed(1000)
@@ -248,7 +224,7 @@ def trainNetwork(data, network):
     losses = []
     # train the network, each epoch is a run through our network with all the data
     for epoch in range(50):
-        # go forward and get a prediction
+        # go forward and get a predictionA
         y_prediction = network.forward(X_train) # get predicted results
 
         # measure the loss/error, going to be high at first
@@ -270,19 +246,12 @@ def trainNetwork(data, network):
         optimizer.step()
 
 
-# send test data into model, without adjusting any weights
-# with torch.no_grad(): # this turns off back propogration so it doesn't go backwards into model and mess with the weights
-#     y_evaluation = network.forward(X_test) #send test data through network
-#     losss= criterion(y_evaluation, y_test)
-#     print(losss)
 
 def sendToNetwork(gamestate, network):
     #gamestate consists of ["Player score", "Dealer score", "Running count", "WinLoss"], ex. [20, 17, 3, 1]
-    with torch.no_grad():
+    with torch.no_grad(): # this turns off back propogration so it doesn't go backwards into model and mess with the weights
         #test_input = torch.FloatTensor([gamestate])  # Ensure 2D input
         test_output = network(torch.FloatTensor([gamestate]))
         action = torch.argmax(test_output, dim=1).item()
         print(f"With gamestate: {gamestate} Custom Input Prediction: {action} (0=Stand, 1=Hit)")
         return action
-
-#run = sendToNetwork([20, 17, 3, 1])
