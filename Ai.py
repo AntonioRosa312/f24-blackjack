@@ -246,6 +246,11 @@ def trainNetwork(data, network):
         optimizer.step()
 
 
+# send test data into model, without adjusting any weights
+# with torch.no_grad(): # this turns off back propogration so it doesn't go backwards into model and mess with the weights
+#     y_evaluation = network.forward(X_test) #send test data through network
+#     losss= criterion(y_evaluation, y_test)
+#     print(losss)
 
 def sendToNetwork(gamestate, network):
     #gamestate consists of ["Player score", "Dealer score", "Running count", "WinLoss"], ex. [20, 17, 3, 1]
